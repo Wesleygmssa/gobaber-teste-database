@@ -1,6 +1,15 @@
 import { startOfHour } from 'date-fns';
-import AppointmentsRepository from '../repositories/AppointmentsRepository'
+import {getCustomRepository} from 'typeorm';
+import Appointment from '../models/Appointment';
+import AppointmentsRepository from '../repositories/AppointmentsRepository';// SERÁ RECEBIDO COMO PARAMETROS DA CLASS
 
+//SOLID
+
+// Single Responsability Principle
+// Dependency Inverstion Principe
+
+
+//TIPO DAS VARIAVEIS
 interface Request {
     provider: string;
     date: Date;
@@ -8,21 +17,24 @@ interface Request {
 //REGRA DE NEGOCIOS
 class CreateAppointmentService {
 
-    private appointmentsRepository: AppointmentsRepository;
+    public async execute({ provider, date }: Request) {
+        const appointmentsRepository = getCustomRepository(AppointmentsRepository);
 
-    constructor(appointmentsRepository: AppointmentsRepository)  {this.appointmentsRepository = appointmentsRepository}
+        const appointmentDate = startOfHour(date); //HORA EX: 12:00:00
 
-    public execute({ provider, date }: Request) {
+        const findAppointmentInSameDate = await appointmentsRepository.findByDate(appointmentDate); 
 
-        const appointmentDate = startOfHour(date); 
+        if (findAppointmentInSameDate) 
+        throw Error('This appointment is already booked'); //TRATATIVA DE ERROS E EXCESSÕES
 
-        const findAppointmentInSameDate = this.appointmentsRepository.findByDate(appointmentDate); 
+        const appointment = appointmentsRepository.create({ 
+            provider, 
+            date: appointmentDate 
+        });
 
-        if (findAppointmentInSameDate)throw Error('This appointment is already booked');
+        await appointmentsRepository.save(appointment);
 
-        const appointment = this.appointmentsRepository.create({provider,date: appointmentDate});
-
-        return appointment
+        return appointment;
     }
 }
 

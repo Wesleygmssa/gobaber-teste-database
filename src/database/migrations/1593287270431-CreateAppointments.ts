@@ -13,7 +13,7 @@ export default class CreateAppointments1593287270431 implements MigrationInterfa
                         type: 'varchar',
                         isPrimary: true,
                         generationStrategy: 'uuid',
-                        default: 'uuid_generate_v4()',
+                        default: 'uuid_generate_v4()', //caso não funcione instalar bliblioteca
                         
                     },
                     {

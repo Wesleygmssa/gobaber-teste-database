@@ -1,35 +1,38 @@
+//Responsabilidade da rota: Receber a requisição, chamar outros arquivos, devolver uma resposta
 import { Router } from 'express';
 import {  parseISO } from 'date-fns'; 
-
+import {getCustomRepository} from 'typeorm';
 import AppointmentsRepository from '../repositories/AppointmentsRepository'; 
 import CreateAppointmentService from '../services/CreateAppointmentService';
 
 const appointmentsRouter = Router(); 
 
-const appointmentsRepository = new AppointmentsRepository(); 
+appointmentsRouter.get('/', async (request, response)=>{ 
 
-
-appointmentsRouter.get('/',(request, response)=>{
-
-    const appointments = appointmentsRepository.all(); 
+    const appointmentsRepository = getCustomRepository(AppointmentsRepository)
+   
+    const appointments = await appointmentsRepository.find();
 
     return response.json(appointments); 
 });
 
-appointmentsRouter.post('/', (request, response) => {
+appointmentsRouter.post('/', async (request, response) => {
 
-    try{
+    try{//TRATATIVA DE ERRO E EXCESSÕES TRHOW
         const { provider, date } = request.body; // recebendo dados 
 
         const parsedDate = parseISO(date); // transfromando dados
         
-        const createAppointment = new CreateAppointmentService(appointmentsRepository); // esse objeto recebe dados para contructor a class appointmentsRepository
+        const createAppointment = new CreateAppointmentService(); 
     
-        const appointment = createAppointment.execute({date:parsedDate, provider});// chamando (function execut) e retorna um appointment.
+        const appointment = await createAppointment.execute({
+            date:parsedDate, 
+            provider
+        });// chamando (function execut) e retorna um appointment.
       
         return response.json(appointment);
     
-    } catch (err){return response.status(400).json({error: err.message});}
+    } catch (err){return response.status(400).json({error: err.message})}
    
 });
 
